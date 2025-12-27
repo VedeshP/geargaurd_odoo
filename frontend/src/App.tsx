@@ -1,13 +1,7 @@
-import './App.css'
+import { AuthPage } from './features/auth/AuthPage'
 
 function App() {
-  return (
-    <>
-      <div className='bg-amber-700'>
-        hellow
-      </div>
-    </>
-  )
+  return <AuthPage />
 }
 
 export default App
