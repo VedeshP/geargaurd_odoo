@@ -4,7 +4,7 @@ from jose import jwt, JWTError
 
 from app.api.deps import get_db
 from app.models.base import User, Company
-from app.schemas.auth import Token, LoginRequest, RefreshRequest
+from app.schemas.auth import Token, LoginRequest, RefreshRequest, LoginResponse
 from app.core.security import (
     verify_password, 
     create_access_token, 
@@ -18,7 +18,7 @@ from app.core.security import get_password_hash
 
 router = APIRouter()
 
-@router.post("/login", response_model=Token)
+@router.post("/login", response_model=LoginResponse)
 def login(login_data: LoginRequest, db: Session = Depends(get_db)):
     # 1. Check User
     user = db.query(User).filter(User.email == login_data.email).first()
@@ -29,11 +29,23 @@ def login(login_data: LoginRequest, db: Session = Depends(get_db)):
     if not verify_password(login_data.password, user.hashed_password):
         raise HTTPException(status_code=400, detail="Incorrect email or password")
     
-    # 3. Generate Tokens
+    # # 3. Generate Tokens
+    # return {
+    #     "access_token": create_access_token(subject=user.id),
+    #     "refresh_token": create_refresh_token(subject=user.id),
+    #     "token_type": "bearer",
+    # }
+
+    access_token = create_access_token(subject=user.id)
+    refresh_token = create_refresh_token(subject=user.id)
+
     return {
-        "access_token": create_access_token(subject=user.id),
-        "refresh_token": create_refresh_token(subject=user.id),
-        "token_type": "bearer",
+        "success": True,
+        "data": {
+            "user": user,
+            "token": access_token,
+            "refreshToken": refresh_token
+        }
     }
 
 @router.post("/refresh", response_model=Token)
