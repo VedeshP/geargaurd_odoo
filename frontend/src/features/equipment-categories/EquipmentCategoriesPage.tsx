@@ -6,7 +6,7 @@ export interface EquipmentCategoriesPageRef {
   openCreateModal: () => void
 }
 
-export const EquipmentCategoriesPage = forwardRef<EquipmentCategoriesPageRef, object>((props, ref) => {
+export const EquipmentCategoriesPage = forwardRef<EquipmentCategoriesPageRef, object>((_props, ref) => {
   const [isCreateModalOpen, setIsCreateModalOpen] = useState(false)
 
   useImperativeHandle(ref, () => ({

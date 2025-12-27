@@ -4,7 +4,12 @@ import type { EquipmentCategoriesPageRef } from '../equipment-categories/Equipme
 import { EquipmentCategoriesPage } from '../equipment-categories/EquipmentCategoriesPage'
 import type { EquipmentPageRef } from '../equipment/EquipmentPage'
 import { EquipmentPage } from '../equipment/EquipmentPage'
-import { MaintenanceRequestModal } from '../maintenance/components/MaintenanceRequestModal'
+import type { MaintenanceCalendarPageRef } from '../maintenance-calendar/MaintenanceCalendarPage'
+import { MaintenanceCalendarPage } from '../maintenance-calendar/MaintenanceCalendarPage'
+import type { MaintenancePageRef } from '../maintenance/MaintenancePage'
+import { MaintenancePage } from '../maintenance/MaintenancePage'
+import type { ReportingPageRef } from '../reporting/ReportingPage'
+import { ReportingPage } from '../reporting/ReportingPage'
 import type { TeamsPageRef } from '../teams/TeamsPage'
 import { TeamsPage } from '../teams/TeamsPage'
 import { DashboardHeader } from './components/DashboardHeader'
@@ -15,12 +20,12 @@ import { MaintenanceRequestsTable } from './components/MaintenanceRequestsTable'
 export function DashboardPage() {
   const { currentView, navigationParams, navigate } = useNavigation()
   const [activeTab, setActiveTab] = useState('dashboard')
-  const [isCreateModalOpen, setIsCreateModalOpen] = useState(false)
   const teamsPageRef = useRef<TeamsPageRef>(null)
   const equipmentPageRef = useRef<EquipmentPageRef>(null)
   const equipmentCategoriesPageRef = useRef<EquipmentCategoriesPageRef>(null)
-
-  console.log('DashboardPage render - activeTab:', activeTab)
+  const maintenancePageRef = useRef<MaintenancePageRef>(null)
+  const calendarPageRef = useRef<MaintenanceCalendarPageRef>(null)
+  const reportingPageRef = useRef<ReportingPageRef>(null)
 
   const handleNewClick = () => {
     if (activeTab === 'teams') {
@@ -29,30 +34,32 @@ export function DashboardPage() {
       equipmentPageRef.current?.openCreateModal()
     } else if (activeTab === 'equipment-categories') {
       equipmentCategoriesPageRef.current?.openCreateModal()
-    } else {
-      setIsCreateModalOpen(true)
+    } else if (activeTab === 'maintenance') {
+      maintenancePageRef.current?.openCreateModal()
+    } else if (activeTab === 'calendar') {
+      calendarPageRef.current?.openCreateModal()
     }
   }
 
   const handleNavigateToTeams = () => {
     setActiveTab('teams')
-    setIsCreateModalOpen(false)
+    navigate('teams')
   }
 
   const handleNavigateToCategories = () => {
     setActiveTab('equipment-categories')
-    setIsCreateModalOpen(false)
+    navigate('equipment-categories' as any)
   }
 
-  const handleNavigateToEquipment = (equipmentId?: string) => {
+  const handleNavigateToEquipment = (_equipmentId?: string) => {
     setActiveTab('equipment')
+    navigate('equipment')
     // Equipment page will handle opening the modal if equipmentId is provided
   }
 
   // Listen to navigation service events
   useEffect(() => {
     if (currentView && currentView !== activeTab) {
-      console.log('Navigation service changed view to:', currentView)
       setActiveTab(currentView)
       
       // Handle specific actions based on navigation params
@@ -65,7 +72,9 @@ export function DashboardPage() {
         } else if (currentView === 'equipment-categories') {
           equipmentCategoriesPageRef.current?.openCreateModal()
         } else if (currentView === 'maintenance') {
-          setIsCreateModalOpen(true)
+          maintenancePageRef.current?.openCreateModal()
+        } else if (currentView === 'calendar') {
+          calendarPageRef.current?.openCreateModal()
         }
       }
     }
@@ -76,7 +85,6 @@ export function DashboardPage() {
       <DashboardHeader
         activeTab={activeTab}
         onTabChange={(tab) => {
-          console.log('Tab changed to:', tab)
           setActiveTab(tab)
           // Update navigation service to keep them in sync
           navigate(tab as any)
@@ -91,17 +99,12 @@ export function DashboardPage() {
       ) : activeTab === 'equipment-categories' ? (
         <EquipmentCategoriesPage ref={equipmentCategoriesPageRef} />
       ) : activeTab === 'reporting' ? (
-        <main className="p-6 max-w-7xl mx-auto">
-          <DashboardReports />
-        </main>
+        <ReportingPage ref={reportingPageRef} />
       ) : activeTab === 'calendar' ? (
-        <main className="p-6 max-w-7xl mx-auto">
-          <div className="text-center py-12">
-            <h2 className="text-2xl font-bold text-slate-200 mb-2">Maintenance Calendar</h2>
-            <p className="text-slate-400">Coming soon...</p>
-          </div>
-        </main>
-      ) : activeTab === 'dashboard' || activeTab === 'maintenance' ? (
+        <MaintenanceCalendarPage ref={calendarPageRef} />
+      ) : activeTab === 'maintenance' ? (
+        <MaintenancePage ref={maintenancePageRef} />
+      ) : activeTab === 'dashboard' ? (
         <main className="p-6 max-w-7xl mx-auto">
           <DashboardMetrics />
           <MaintenanceRequestsTable 
@@ -111,14 +114,6 @@ export function DashboardPage() {
           <DashboardReports />
         </main>
       ) : null}
-
-      {/* Create New Request Modal */}
-      <MaintenanceRequestModal
-        isOpen={isCreateModalOpen}
-        onClose={() => setIsCreateModalOpen(false)}
-        mode="create"
-        onNavigateToTeams={handleNavigateToTeams}
-      />
     </div>
   )
 }

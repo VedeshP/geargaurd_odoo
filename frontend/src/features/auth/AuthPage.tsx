@@ -11,13 +11,11 @@ export function AuthPage() {
   const [mode, setMode] = useState<AuthMode>('signin')
 
   const handleSignIn = async (data: any) => {
-    console.log('Sign in data:', data)
     // TODO: Implement actual sign-in logic
     alert('Sign in functionality will be connected to backend')
   }
 
   const handleSignUp = async (data: any) => {
-    console.log('Sign up data:', data)
     // TODO: Implement actual sign-up logic
     alert('Sign up functionality will be connected to backend')
   }
@@ -27,7 +25,6 @@ export function AuthPage() {
   }
 
   const handleForgotPasswordSubmit = async (data: any) => {
-    console.log('Forgot password data:', data)
     // TODO: Implement actual forgot password logic
     alert(`Password reset link sent to ${data.email}. Please check your email.`)
     setMode('signin')

@@ -82,7 +82,6 @@ export function DashboardMetrics() {
         subtitle="(Out of Service / Damaged)"
         variant="critical"
         icon={<AlertTriangle className="h-6 w-6 text-white" />}
-        onClick={() => console.log('View critical equipment')}
       />
       
       <MetricCard
@@ -91,7 +90,6 @@ export function DashboardMetrics() {
         subtitle={`${members.length} Active Technicians`}
         variant="info"
         icon={<Users className="h-6 w-6 text-white" />}
-        onClick={() => console.log('View technician workload')}
       />
       
       <MetricCard
@@ -100,7 +98,6 @@ export function DashboardMetrics() {
         subtitle={`${overdueRequests} Overdue`}
         variant="success"
         icon={<ClipboardList className="h-6 w-6 text-white" />}
-        onClick={() => console.log('View open requests')}
       />
     </div>
   )

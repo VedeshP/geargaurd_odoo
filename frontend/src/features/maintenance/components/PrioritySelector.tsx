@@ -11,8 +11,6 @@ export function PrioritySelector({ value, onChange }: PrioritySelectorProps) {
     { level: 'high' as const, diamonds: 3, color: 'fill-red-500' },
   ]
 
-  const currentPriority = priorities.find(p => p.level === value) || priorities[1]
-
   return (
     <div className="flex items-center gap-3">
       {priorities.map((priority) => (

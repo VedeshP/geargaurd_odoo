@@ -14,9 +14,10 @@ interface MaintenanceRequestModalProps {
   request?: any // TODO: Add proper type
   mode: 'create' | 'edit'
   onNavigateToTeams?: () => void
+  prefilledScheduledDate?: string // For calendar integration
 }
 
-export function MaintenanceRequestModal({ isOpen, onClose, request, mode, onNavigateToTeams }: MaintenanceRequestModalProps) {
+export function MaintenanceRequestModal({ isOpen, onClose, request, mode, onNavigateToTeams, prefilledScheduledDate }: MaintenanceRequestModalProps) {
   const allTeams = useTeamsStore((state) => state.teams)
   const getTeamMembers = useTeamsStore((state) => state.getTeamMembers)
   const getAllMembers = useTeamsStore((state) => state.getAllMembers)
@@ -39,7 +40,7 @@ export function MaintenanceRequestModal({ isOpen, onClose, request, mode, onNavi
     maintenanceType: request?.maintenanceType || 'corrective',
     team: request?.teamId || '',
     technician: request?.technicianId || '',
-    scheduledDate: request?.scheduledDate || '',
+    scheduledDate: request?.scheduledDate || prefilledScheduledDate || '',
     duration: request?.duration || '00:00',
     priority: request?.priority || 'medium',
     company: request?.companyId || 'My Company (San Francisco)',
@@ -373,7 +374,10 @@ export function MaintenanceRequestModal({ isOpen, onClose, request, mode, onNavi
                   {onNavigateToTeams && (
                     <button
                       type="button"
-                      onClick={onNavigateToTeams}
+                      onClick={() => {
+                        onNavigateToTeams()
+                        onClose()
+                      }}
                       className="text-blue-400 hover:text-blue-300 text-xs flex items-center gap-1 transition-colors"
                       title="Manage Teams"
                     >
