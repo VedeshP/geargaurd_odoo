@@ -1,3 +1,6 @@
+import { EntityBadge } from '@/components/shared/EntityBadge'
+import { useEquipmentStore } from '@/stores/equipment-store'
+import { useMaintenanceStore } from '@/stores/maintenance-store'
 import type { Team } from '@/stores/teams-store'
 import { useTeamsStore } from '@/stores/teams-store'
 import { useMemo, useState } from 'react'
@@ -5,9 +8,21 @@ import { TeamModal } from './TeamModal'
 
 export function TeamsTable() {
   const allTeams = useTeamsStore((state) => state.teams)
-  const teams = useMemo(() => allTeams.filter(t => t.isActive), [allTeams])
+  const teams = useMemo(() => allTeams.filter((t) => t.isActive), [allTeams])
+
+  const equipment = useEquipmentStore((state) => state.equipment)
+  const getRequestCountByTeam = useMaintenanceStore((state) => state.getRequestCountByTeam)
+
   const [selectedTeam, setSelectedTeam] = useState<Team | null>(null)
   const [isModalOpen, setIsModalOpen] = useState(false)
+
+  // Helper to count equipment assigned to team members
+  const getTeamEquipmentCount = (teamId: string) => {
+    const team = allTeams.find((t) => t.id === teamId)
+    if (!team) return 0
+    const memberIds = team.members.map((m) => m.userId)
+    return equipment.filter((eq) => eq.technicianId && memberIds.includes(eq.technicianId) && eq.isActive).length
+  }
 
   const handleRowClick = (team: Team) => {
     setSelectedTeam(team)
@@ -26,6 +41,9 @@ export function TeamsTable() {
                 </th>
                 <th className="text-left py-4 px-6 text-sm font-semibold text-slate-300">
                   Team Members
+                </th>
+                <th className="text-left py-4 px-6 text-sm font-semibold text-slate-300">
+                  Assignments
                 </th>
                 <th className="text-left py-4 px-6 text-sm font-semibold text-slate-300">
                   Company
@@ -50,9 +68,12 @@ export function TeamsTable() {
                   <td className="py-4 px-6">
                     <div className="flex items-center gap-2">
                       {team.members.map((member) => (
-                        <div key={member.id} className="flex items-center gap-2">
-                          <div className="w-8 h-8 rounded-full bg-slate-700 flex items-center justify-center text-xs font-medium text-slate-300">
-                            {member.name.split(' ').map(n => n[0]).join('')}
+                        <div key={member.userId} className="flex items-center gap-2">
+                          <div className="w-8 h-8 rounded-full bg-blue-600 flex items-center justify-center text-xs font-medium text-white">
+                            {member.name
+                              .split(' ')
+                              .map((n) => n[0])
+                              .join('')}
                           </div>
                           <span className="text-sm text-slate-300">{member.name}</span>
                         </div>
@@ -60,6 +81,24 @@ export function TeamsTable() {
                       {team.members.length === 0 && (
                         <span className="text-sm text-slate-500 italic">No members</span>
                       )}
+                    </div>
+                  </td>
+                  <td className="py-4 px-6">
+                    <div className="flex items-center gap-2">
+                      <EntityBadge
+                        type="equipment"
+                        id={team.id}
+                        label="Equipment"
+                        count={getTeamEquipmentCount(team.id)}
+                        variant="secondary"
+                      />
+                      <EntityBadge
+                        type="maintenance"
+                        id={team.id}
+                        label="Active Requests"
+                        count={getRequestCountByTeam(team.id)}
+                        variant="secondary"
+                      />
                     </div>
                   </td>
                   <td className="py-4 px-6">

@@ -1,4 +1,8 @@
+import { useEquipmentStore } from '@/stores/equipment-store'
+import { useMaintenanceStore } from '@/stores/maintenance-store'
+import { useTeamsStore } from '@/stores/teams-store'
 import { AlertTriangle, ClipboardList, Users } from 'lucide-react'
+import { useMemo } from 'react'
 
 interface MetricCardProps {
   title: string
@@ -40,12 +44,42 @@ export function MetricCard({ title, metric, subtitle, variant, icon, onClick }: 
 }
 
 export function DashboardMetrics() {
+  // Get real data from stores
+  const equipment = useEquipmentStore((state) => state.equipment)
+  const requests = useMaintenanceStore((state) => state.requests)
+  const getAllMembers = useTeamsStore((state) => state.getAllMembers)
+  
+  const members = useMemo(() => getAllMembers(), [getAllMembers])
+
+  // Calculate critical equipment (Out of Service or Lost/Damaged)
+  const criticalEquipment = useMemo(() => {
+    return equipment.filter(eq => 
+      eq.isActive && (eq.status === 'Out of Service' || eq.status === 'Lost/Damaged')
+    ).length
+  }, [equipment])
+
+  // Calculate technician load (active requests / total technicians)
+  const technicianLoad = useMemo(() => {
+    if (members.length === 0) return 0
+    const activeRequests = requests.filter(r => r.isActive && r.status === 'in-progress').length
+    return Math.round((activeRequests / members.length) * 100)
+  }, [requests, members])
+
+  // Calculate open and overdue requests
+  const openRequests = useMemo(() => {
+    return requests.filter(r => r.isActive && (r.status === 'new' || r.status === 'in-progress')).length
+  }, [requests])
+
+  const overdueRequests = useMemo(() => {
+    return requests.filter(r => r.isActive && r.status === 'overdue').length
+  }, [requests])
+
   return (
     <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 mb-8">
       <MetricCard
         title="Critical Equipment"
-        metric="5 Units"
-        subtitle="(Health < 30%)"
+        metric={`${criticalEquipment} Units`}
+        subtitle="(Out of Service / Damaged)"
         variant="critical"
         icon={<AlertTriangle className="h-6 w-6 text-white" />}
         onClick={() => console.log('View critical equipment')}
@@ -53,8 +87,8 @@ export function DashboardMetrics() {
       
       <MetricCard
         title="Technician Load"
-        metric="86% Utilized"
-        subtitle="(Assign Carefully)"
+        metric={`${technicianLoad}% Utilized`}
+        subtitle={`${members.length} Active Technicians`}
         variant="info"
         icon={<Users className="h-6 w-6 text-white" />}
         onClick={() => console.log('View technician workload')}
@@ -62,8 +96,8 @@ export function DashboardMetrics() {
       
       <MetricCard
         title="Open Requests"
-        metric="12 Pending"
-        subtitle="3 Overdue"
+        metric={`${openRequests} Pending`}
+        subtitle={`${overdueRequests} Overdue`}
         variant="success"
         icon={<ClipboardList className="h-6 w-6 text-white" />}
         onClick={() => console.log('View open requests')}

@@ -1,18 +1,13 @@
+import { EntityLink } from '@/components/shared/EntityLink'
 import { MaintenanceRequestModal } from '@/features/maintenance/components/MaintenanceRequestModal'
-import { useState } from 'react'
-
-interface MaintenanceRequest {
-  id: string
-  priority: 'high' | 'medium' | 'low'
-  equipment: string
-  maintainer: string
-  category: string
-  status: 'new' | 'in-progress' | 'completed' | 'overdue'
-  company: string
-}
+import { useEquipmentStore } from '@/stores/equipment-store'
+import { useMaintenanceStore } from '@/stores/maintenance-store'
+import { useTeamsStore } from '@/stores/teams-store'
+import { useMemo, useState } from 'react'
 
 interface MaintenanceRequestsTableProps {
   onNavigateToTeams?: () => void
+  onNavigateToEquipment?: (equipmentId?: string) => void
 }
 
 const priorityColors = {
@@ -35,60 +30,39 @@ const statusLabels = {
   overdue: 'Overdue',
 }
 
-const mockRequests: MaintenanceRequest[] = [
-  {
-    id: '1',
-    priority: 'high',
-    equipment: 'Critical Alert',
-    maintainer: 'Joe Foster',
-    category: 'Computer',
-    status: 'new',
-    company: 'Any Request',
-  },
-  {
-    id: '2',
-    priority: 'medium',
-    equipment: 'Task activity',
-    maintainer: 'Joe Foster',
-    category: 'Generator',
-    status: 'in-progress',
-    company: 'Any Request',
-  },
-  {
-    id: '3',
-    priority: 'high',
-    equipment: 'CNC Machine',
-    maintainer: 'Sarah Johnson',
-    category: 'Production',
-    status: 'overdue',
-    company: 'Production Dept',
-  },
-  {
-    id: '4',
-    priority: 'low',
-    equipment: 'Office Printer',
-    maintainer: 'Mike Chen',
-    category: 'Office Equipment',
-    status: 'completed',
-    company: 'Administration',
-  },
-  {
-    id: '5',
-    priority: 'medium',
-    equipment: 'HVAC System',
-    maintainer: 'Joe Foster',
-    category: 'Building',
-    status: 'new',
-    company: 'Facilities',
-  },
-]
+export function MaintenanceRequestsTable({ onNavigateToTeams, onNavigateToEquipment }: MaintenanceRequestsTableProps) {
+  // Get data from stores
+  const allRequests = useMaintenanceStore((state) => state.requests)
+  const requests = useMemo(() => allRequests.filter((r) => r.isActive), [allRequests])
 
-export function MaintenanceRequestsTable({ onNavigateToTeams }: MaintenanceRequestsTableProps) {
-  const [selectedRequest, setSelectedRequest] = useState<MaintenanceRequest | null>(null)
+  const equipment = useEquipmentStore((state) => state.equipment)
+  const allMembers = useTeamsStore((state) => state.getAllMembers)
+  const teams = useTeamsStore((state) => state.teams)
+
+  const members = useMemo(() => allMembers(), [allMembers])
+
+  const [selectedRequestId, setSelectedRequestId] = useState<string | null>(null)
   const [isModalOpen, setIsModalOpen] = useState(false)
 
-  const handleRowClick = (request: MaintenanceRequest) => {
-    setSelectedRequest(request)
+  // Helper functions to get display names
+  const getEquipmentName = (equipmentId: string) => {
+    const eq = equipment.find((e) => e.id === equipmentId)
+    return eq?.name || 'Unknown Equipment'
+  }
+
+  const getTechnicianName = (technicianId?: string) => {
+    if (!technicianId) return 'Unassigned'
+    const member = members.find((m) => m.userId === technicianId)
+    return member?.name || 'Unknown'
+  }
+
+  const getTeamName = (teamId: string) => {
+    const team = teams.find((t) => t.id === teamId)
+    return team?.name || 'Unknown Team'
+  }
+
+  const handleRowClick = (requestId: string) => {
+    setSelectedRequestId(requestId)
     setIsModalOpen(true)
   }
 
@@ -108,13 +82,13 @@ export function MaintenanceRequestsTable({ onNavigateToTeams }: MaintenanceReque
             </tr>
           </thead>
           <tbody>
-            {mockRequests.map((request, index) => (
+            {requests.map((request, index) => (
               <tr
                 key={request.id}
-                onClick={() => handleRowClick(request)}
+                onClick={() => handleRowClick(request.id)}
                 className={`
                   border-b border-slate-800 hover:bg-slate-800/50 transition-colors cursor-pointer
-                  ${index === mockRequests.length - 1 ? 'border-b-0' : ''}
+                  ${index === requests.length - 1 ? 'border-b-0' : ''}
                   ${request.status === 'overdue' ? 'bg-red-950/20' : ''}
                 `}
               >
@@ -125,38 +99,52 @@ export function MaintenanceRequestsTable({ onNavigateToTeams }: MaintenanceReque
                   </div>
                 </td>
                 <td className="py-4 px-6">
-                  <span className="text-sm text-slate-200 font-medium">{request.equipment}</span>
+                  <EntityLink
+                    type="equipment"
+                    id={request.equipmentId}
+                    onClick={() => onNavigateToEquipment?.(request.equipmentId)}
+                    className="text-sm font-medium"
+                  >
+                    {getEquipmentName(request.equipmentId)}
+                  </EntityLink>
                 </td>
                 <td className="py-4 px-6">
                   <div className="flex items-center gap-2">
-                    <div className="w-8 h-8 rounded-full bg-slate-700 flex items-center justify-center text-xs font-medium text-slate-300">
-                      {request.maintainer.split(' ').map(n => n[0]).join('')}
-                    </div>
-                    <span className="text-sm text-slate-300">{request.maintainer}</span>
+                    <EntityLink
+                      type="teams"
+                      id={request.technicianId || ''}
+                      onClick={() => onNavigateToTeams?.()}
+                      className="text-sm"
+                    >
+                      {getTechnicianName(request.technicianId)}
+                    </EntityLink>
                   </div>
                 </td>
                 <td className="py-4 px-6">
-                  <span className="text-sm text-slate-300">{request.category}</span>
+                  <span className="text-sm text-slate-300">
+                    {getTeamName(request.teamId)}
+                  </span>
                 </td>
                 <td className="py-4 px-6">
-                  <span className={`
-                    inline-flex items-center px-3 py-1 rounded-full text-xs font-medium border
-                    ${statusColors[request.status]}
-                  `}>
+                  <span
+                    className={`
+                      inline-flex items-center px-3 py-1 rounded-full text-xs font-medium border
+                      ${statusColors[request.status]}
+                    `}
+                  >
                     {statusLabels[request.status]}
                   </span>
                 </td>
                 <td className="py-4 px-6">
-                  <span className="text-sm text-slate-400">{request.company}</span>
+                  <span className="text-sm text-slate-400">{request.subject}</span>
                 </td>
               </tr>
             ))}
           </tbody>
         </table>
         </div>
-      
-        {/* Empty state if no data */}
-        {mockRequests.length === 0 && (
+
+        {requests.length === 0 && (
           <div className="py-12 text-center">
             <p className="text-slate-400">No maintenance requests found</p>
           </div>
@@ -166,8 +154,11 @@ export function MaintenanceRequestsTable({ onNavigateToTeams }: MaintenanceReque
       {/* Maintenance Request Modal */}
       <MaintenanceRequestModal
         isOpen={isModalOpen}
-        onClose={() => setIsModalOpen(false)}
-        request={selectedRequest}
+        onClose={() => {
+          setIsModalOpen(false)
+          setSelectedRequestId(null)
+        }}
+        request={requests.find((r) => r.id === selectedRequestId)}
         mode="edit"
         onNavigateToTeams={onNavigateToTeams}
       />

@@ -1,6 +1,7 @@
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
+import { useMaintenanceStore } from '@/stores/maintenance-store'
 import { useTeamsStore } from '@/stores/teams-store'
 import { Archive, ArrowRight, Ban, ExternalLink, MessageSquare, X } from 'lucide-react'
 import { useEffect, useMemo, useState } from 'react'
@@ -20,6 +21,9 @@ export function MaintenanceRequestModal({ isOpen, onClose, request, mode, onNavi
   const getTeamMembers = useTeamsStore((state) => state.getTeamMembers)
   const getAllMembers = useTeamsStore((state) => state.getAllMembers)
   
+  const addRequest = useMaintenanceStore((state) => state.addRequest)
+  const updateRequest = useMaintenanceStore((state) => state.updateRequest)
+  
   const teams = useMemo(() => allTeams.filter(t => t.isActive), [allTeams])
   
   const [activeTab, setActiveTab] = useState<'notes' | 'instructions'>('notes')
@@ -28,18 +32,18 @@ export function MaintenanceRequestModal({ isOpen, onClose, request, mode, onNavi
   const [formData, setFormData] = useState({
     subject: request?.subject || '',
     maintenanceFor: request?.maintenanceFor || 'equipment',
-    equipment: request?.equipment || '',
+    equipment: request?.equipmentId || '',
     workCenter: request?.workCenter || '',
-    category: request?.category || 'Computers',
+    category: request?.categoryId || 'Computers',
     requestDate: request?.requestDate || new Date().toISOString().split('T')[0],
     maintenanceType: request?.maintenanceType || 'corrective',
-    team: request?.team || '',
-    technician: request?.technician || '',
+    team: request?.teamId || '',
+    technician: request?.technicianId || '',
     scheduledDate: request?.scheduledDate || '',
     duration: request?.duration || '00:00',
     priority: request?.priority || 'medium',
-    company: request?.company || 'My Company (San Francisco)',
-    stage: request?.stage || 'new',
+    company: request?.companyId || 'My Company (San Francisco)',
+    stage: request?.status || 'new',
     notes: request?.notes || '',
     instructions: request?.instructions || '',
     isBlocked: request?.isBlocked || false,
@@ -65,8 +69,49 @@ export function MaintenanceRequestModal({ isOpen, onClose, request, mode, onNavi
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault()
-    console.log('Submitting form:', formData)
-    // TODO: Implement API call
+    
+    if (mode === 'create') {
+      // Create new request
+      addRequest({
+        subject: formData.subject,
+        equipmentId: formData.equipment, // TODO: Should be equipment ID not name
+        teamId: formData.team,
+        technicianId: formData.technician,
+        maintenanceFor: formData.maintenanceFor as 'equipment' | 'work-center',
+        workCenter: formData.workCenter,
+        maintenanceType: formData.maintenanceType as 'corrective' | 'preventive',
+        priority: formData.priority as 'high' | 'medium' | 'low',
+        status: formData.stage as 'new' | 'in-progress' | 'completed' | 'overdue',
+        requestDate: formData.requestDate,
+        scheduledDate: formData.scheduledDate || undefined,
+        duration: formData.duration || undefined,
+        notes: formData.notes || undefined,
+        instructions: formData.instructions || undefined,
+        isBlocked: formData.isBlocked,
+        isArchived: formData.isArchived,
+      })
+    } else if (mode === 'edit' && request?.id) {
+      // Update existing request
+      updateRequest(request.id, {
+        subject: formData.subject,
+        equipmentId: formData.equipment,
+        teamId: formData.team,
+        technicianId: formData.technician,
+        maintenanceFor: formData.maintenanceFor as 'equipment' | 'work-center',
+        workCenter: formData.workCenter,
+        maintenanceType: formData.maintenanceType as 'corrective' | 'preventive',
+        priority: formData.priority as 'high' | 'medium' | 'low',
+        status: formData.stage as 'new' | 'in-progress' | 'completed' | 'overdue',
+        requestDate: formData.requestDate,
+        scheduledDate: formData.scheduledDate || undefined,
+        duration: formData.duration || undefined,
+        notes: formData.notes || undefined,
+        instructions: formData.instructions || undefined,
+        isBlocked: formData.isBlocked,
+        isArchived: formData.isArchived,
+      })
+    }
+    
     onClose()
   }
 

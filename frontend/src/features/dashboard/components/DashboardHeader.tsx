@@ -9,12 +9,12 @@ interface DashboardHeaderProps {
 }
 
 const tabs = [
-  { id: 'maintenance', label: 'Maintenance' },
-  { id: 'dashboard', label: 'Dashboard' },
-  { id: 'calendar', label: 'Maintenance Calendar' },
-  { id: 'equipment', label: 'Equipment' },
-  { id: 'reporting', label: 'Reporting' },
-  { id: 'teams', label: 'Teams' },
+   { id: 'dashboard', label: 'Dashboard' },
+   { id: 'maintenance', label: 'Maintenance' },
+   { id: 'calendar', label: 'Maintenance Calendar' },
+   { id: 'equipment', label: 'Equipment' },
+   { id: 'reporting', label: 'Reporting' },
+   { id: 'teams', label: 'Teams' },
 ]
 
 export function DashboardHeader({ activeTab, onTabChange, onNewRequest }: DashboardHeaderProps) {
