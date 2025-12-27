@@ -1,10 +1,11 @@
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
 import { Cog, Shield } from 'lucide-react'
 import { useState } from 'react'
+import { ForgotPasswordForm } from './forgot-password/components/ForgotPasswordForm'
 import { SignInForm } from './sign-in/components/SignInForm'
 import { SignUpForm } from './sign-up/components/SignUpForm'
 
-type AuthMode = 'signin' | 'signup'
+type AuthMode = 'signin' | 'signup' | 'forgot-password'
 
 export function AuthPage() {
   const [mode, setMode] = useState<AuthMode>('signin')
@@ -22,7 +23,14 @@ export function AuthPage() {
   }
 
   const handleForgotPassword = () => {
-    alert('Forgot password functionality will be implemented')
+    setMode('forgot-password')
+  }
+
+  const handleForgotPasswordSubmit = async (data: any) => {
+    console.log('Forgot password data:', data)
+    // TODO: Implement actual forgot password logic
+    alert(`Password reset link sent to ${data.email}. Please check your email.`)
+    setMode('signin')
   }
 
   return (
@@ -100,12 +108,18 @@ export function AuthPage() {
           <Card className="border border-slate-800 shadow-2xl bg-slate-900/50 backdrop-blur">
             <CardHeader className="space-y-2 pb-6">
               <CardTitle className="text-2xl font-bold text-center text-white">
-                {mode === 'signin' ? 'Welcome back' : 'Create an account'}
+                {mode === 'signin' 
+                  ? 'Welcome back' 
+                  : mode === 'signup' 
+                  ? 'Create an account'
+                  : 'Reset password'}
               </CardTitle>
               <CardDescription className="text-center text-slate-400">
                 {mode === 'signin'
                   ? 'Enter your credentials to access your account'
-                  : 'Enter your information to get started'}
+                  : mode === 'signup'
+                  ? 'Enter your information to get started'
+                  : 'We\'ll help you get back into your account'}
               </CardDescription>
             </CardHeader>
             <CardContent>
@@ -115,10 +129,15 @@ export function AuthPage() {
                   onForgotPassword={handleForgotPassword}
                   onSwitchToSignUp={() => setMode('signup')}
                 />
-              ) : (
+              ) : mode === 'signup' ? (
                 <SignUpForm
                   onSignUp={handleSignUp}
                   onSwitchToSignIn={() => setMode('signin')}
+                />
+              ) : (
+                <ForgotPasswordForm
+                  onSubmit={handleForgotPasswordSubmit}
+                  onBackToSignIn={() => setMode('signin')}
                 />
               )}
             </CardContent>
