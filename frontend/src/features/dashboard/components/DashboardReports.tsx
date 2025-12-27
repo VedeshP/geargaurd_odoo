@@ -2,20 +2,17 @@ import { BarChart, DonutChart } from './Charts'
 
 // Mock data for requests per team
 const requestsByTeam = [
-  { label: 'Mechanics', value: 28, color: '#3b82f6' },
-  { label: 'Electricians', value: 15, color: '#10b981' },
-  { label: 'IT Support', value: 22, color: '#f59e0b' },
-  { label: 'HVAC Team', value: 12, color: '#8b5cf6' },
-  { label: 'Facilities', value: 8, color: '#ec4899' },
+  { label: 'Internal Maintenance', value: 6, color: '#3b82f6' },
+  { label: 'IT Support', value: 1, color: '#10b981' },
 ]
 
 // Mock data for requests per equipment category
 const requestsByCategory = [
-  { label: 'Production Machines', value: 32, color: '#ef4444' },
-  { label: 'Computers', value: 18, color: '#3b82f6' },
-  { label: 'Vehicles', value: 14, color: '#10b981' },
-  { label: 'Building Systems', value: 20, color: '#f59e0b' },
-  { label: 'Office Equipment', value: 11, color: '#8b5cf6' },
+  { label: 'Computers', value: 2, color: '#3b82f6' },
+  { label: 'Monitors', value: 2, color: '#10b981' },
+  { label: 'Printers', value: 1, color: '#f59e0b' },
+  { label: 'Servers', value: 1, color: '#8b5cf6' },
+  { label: 'Production Machinery', value: 1, color: '#ef4444' },
 ]
 
 export function DashboardReports() {
@@ -57,13 +54,13 @@ export function DashboardReports() {
 
         <div className="bg-slate-900 rounded-lg border border-slate-800 p-4">
           <div className="text-sm text-slate-400 mb-1">Total Requests</div>
-          <div className="text-2xl font-bold text-white">85</div>
+          <div className="text-2xl font-bold text-white">7</div>
           <div className="text-xs text-slate-500 mt-1">This month</div>
         </div>
 
         <div className="bg-slate-900 rounded-lg border border-slate-800 p-4">
           <div className="text-sm text-slate-400 mb-1">Active Technicians</div>
-          <div className="text-2xl font-bold text-white">24</div>
+          <div className="text-2xl font-bold text-white">5</div>
           <div className="text-xs text-slate-500 mt-1">On duty today</div>
         </div>
       </div>

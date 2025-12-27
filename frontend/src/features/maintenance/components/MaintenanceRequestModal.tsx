@@ -5,7 +5,6 @@ import { useMaintenanceStore } from '@/stores/maintenance-store'
 import { useTeamsStore } from '@/stores/teams-store'
 import { Archive, ArrowRight, Ban, ExternalLink, MessageSquare, X } from 'lucide-react'
 import { useEffect, useMemo, useState } from 'react'
-import { useNavigation } from '@/hooks/use-navigation'
 import { PrioritySelector } from './PrioritySelector'
 import { StagePipeline } from './StagePipeline'
 
@@ -15,10 +14,10 @@ interface MaintenanceRequestModalProps {
   request?: any // TODO: Add proper type
   mode: 'create' | 'edit'
   onNavigateToTeams?: () => void
+  prefilledScheduledDate?: string // For calendar integration
 }
 
-export function MaintenanceRequestModal({ isOpen, onClose, request, mode, onNavigateToTeams }: MaintenanceRequestModalProps) {
-  const { navigate } = useNavigation();
+export function MaintenanceRequestModal({ isOpen, onClose, request, mode, onNavigateToTeams, prefilledScheduledDate }: MaintenanceRequestModalProps) {
   const allTeams = useTeamsStore((state) => state.teams)
   const getTeamMembers = useTeamsStore((state) => state.getTeamMembers)
   const getAllMembers = useTeamsStore((state) => state.getAllMembers)
@@ -41,7 +40,7 @@ export function MaintenanceRequestModal({ isOpen, onClose, request, mode, onNavi
     maintenanceType: request?.maintenanceType || 'corrective',
     team: request?.teamId || '',
     technician: request?.technicianId || '',
-    scheduledDate: request?.scheduledDate || '',
+    scheduledDate: request?.scheduledDate || prefilledScheduledDate || '',
     duration: request?.duration || '00:00',
     priority: request?.priority || 'medium',
     company: request?.companyId || 'My Company (San Francisco)',
@@ -372,18 +371,20 @@ export function MaintenanceRequestModal({ isOpen, onClose, request, mode, onNavi
               <div className="space-y-2">
                 <div className="flex items-center justify-between">
                   <Label htmlFor="team">Team *</Label>
-                  <button
-                    type="button"
-                    onClick={() => {
-                      navigate('teams');
-                      onClose();
-                    }}
-                    className="text-blue-400 hover:text-blue-300 text-xs flex items-center gap-1 transition-colors"
-                    title="Manage Teams"
-                  >
-                    <ExternalLink className="w-3 h-3" />
-                    <span>Manage Teams</span>
-                  </button>
+                  {onNavigateToTeams && (
+                    <button
+                      type="button"
+                      onClick={() => {
+                        onNavigateToTeams()
+                        onClose()
+                      }}
+                      className="text-blue-400 hover:text-blue-300 text-xs flex items-center gap-1 transition-colors"
+                      title="Manage Teams"
+                    >
+                      <ExternalLink className="w-3 h-3" />
+                      <span>Manage Teams</span>
+                    </button>
+                  )}
                 </div>
                 <select
                   id="team"

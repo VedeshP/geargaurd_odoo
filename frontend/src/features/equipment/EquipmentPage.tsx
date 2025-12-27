@@ -1,4 +1,6 @@
-import { forwardRef, useImperativeHandle, useState } from 'react'
+import { useEquipmentCategoriesStore } from '@/stores/equipment-categories-store'
+import { useEquipmentStore } from '@/stores/equipment-store'
+import { forwardRef, useEffect, useImperativeHandle, useState } from 'react'
 import { EquipmentModal } from './components/EquipmentModal'
 import { EquipmentTable } from './components/EquipmentTable'
 
@@ -12,6 +14,16 @@ interface EquipmentPageProps {
 
 export const EquipmentPage = forwardRef<EquipmentPageRef, EquipmentPageProps>(({ onNavigateToCategories }, ref) => {
   const [isCreateModalOpen, setIsCreateModalOpen] = useState(false)
+
+  // Get store actions
+  const fetchEquipment = useEquipmentStore((state) => state.fetchEquipment)
+  const fetchCategories = useEquipmentCategoriesStore((state) => state.fetchCategories)
+
+  // Fetch data on mount
+  useEffect(() => {
+    fetchEquipment()
+    fetchCategories()
+  }, [fetchEquipment, fetchCategories])
 
   useImperativeHandle(ref, () => ({
     openCreateModal: () => {

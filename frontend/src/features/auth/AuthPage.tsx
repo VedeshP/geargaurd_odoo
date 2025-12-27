@@ -1,4 +1,6 @@
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
+import { authService } from '@/services/auth-service'
+import { useUserStore } from '@/stores/user-store'
 import { Cog, Shield } from 'lucide-react'
 import { useState } from 'react'
 import { ForgotPasswordForm } from './forgot-password/components/ForgotPasswordForm'
@@ -9,17 +11,51 @@ type AuthMode = 'signin' | 'signup' | 'forgot-password'
 
 export function AuthPage() {
   const [mode, setMode] = useState<AuthMode>('signin')
+  const [error, setError] = useState<string | null>(null)
+  const setCurrentUser = useUserStore((state) => state.setCurrentUser)
 
   const handleSignIn = async (data: any) => {
-    console.log('Sign in data:', data)
-    // TODO: Implement actual sign-in logic
-    alert('Sign in functionality will be connected to backend')
+    try {
+      setError(null)
+      const response = await authService.login({
+        email: data.email,
+        password: data.password,
+      })
+
+      // Update user store
+      setCurrentUser({
+        id: response.data.user.id,
+        name: response.data.user.full_name,
+        email: response.data.user.email,
+        role: response.data.user.role === 'employee' ? 'user' : response.data.user.role,
+        company: 'My Company (San Francisco)',
+      })
+
+      // Reload to show dashboard
+      window.location.reload()
+    } catch (err: any) {
+      const errorMessage = err.response?.data?.detail || 'Login failed. Please check your credentials.'
+      setError(errorMessage)
+    }
   }
 
   const handleSignUp = async (data: any) => {
-    console.log('Sign up data:', data)
-    // TODO: Implement actual sign-up logic
-    alert('Sign up functionality will be connected to backend')
+    try {
+      setError(null)
+      await authService.signup({
+        email: data.email,
+        password: data.password,
+        full_name: data.name,
+        role: 'employee',
+      })
+
+      // Show success and redirect to sign-in
+      alert('Account created successfully! Please sign in with your credentials.')
+      setMode('signin')
+    } catch (err: any) {
+      const errorMessage = err.response?.data?.detail || 'Signup failed. Please try again.'
+      setError(errorMessage)
+    }
   }
 
   const handleForgotPassword = () => {
@@ -27,7 +63,6 @@ export function AuthPage() {
   }
 
   const handleForgotPasswordSubmit = async (data: any) => {
-    console.log('Forgot password data:', data)
     // TODO: Implement actual forgot password logic
     alert(`Password reset link sent to ${data.email}. Please check your email.`)
     setMode('signin')
@@ -123,21 +158,35 @@ export function AuthPage() {
               </CardDescription>
             </CardHeader>
             <CardContent>
+              {error && (
+                <div className="mb-4 p-3 bg-red-900/20 border border-red-900/30 rounded-lg">
+                  <p className="text-sm text-red-400">{error}</p>
+                </div>
+              )}
               {mode === 'signin' ? (
                 <SignInForm
                   onSignIn={handleSignIn}
                   onForgotPassword={handleForgotPassword}
-                  onSwitchToSignUp={() => setMode('signup')}
+                  onSwitchToSignUp={() => {
+                    setMode('signup')
+                    setError(null)
+                  }}
                 />
               ) : mode === 'signup' ? (
                 <SignUpForm
                   onSignUp={handleSignUp}
-                  onSwitchToSignIn={() => setMode('signin')}
+                  onSwitchToSignIn={() => {
+                    setMode('signin')
+                    setError(null)
+                  }}
                 />
               ) : (
                 <ForgotPasswordForm
                   onSubmit={handleForgotPasswordSubmit}
-                  onBackToSignIn={() => setMode('signin')}
+                  onBackToSignIn={() => {
+                    setMode('signin')
+                    setError(null)
+                  }}
                 />
               )}
             </CardContent>

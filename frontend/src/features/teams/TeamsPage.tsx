@@ -1,4 +1,5 @@
-import { forwardRef, useImperativeHandle, useState } from 'react'
+import { useTeamsStore } from '@/stores/teams-store'
+import { forwardRef, useEffect, useImperativeHandle, useState } from 'react'
 import { TeamModal } from './components/TeamModal'
 import { TeamsTable } from './components/TeamsTable'
 
@@ -8,6 +9,14 @@ export interface TeamsPageRef {
 
 export const TeamsPage = forwardRef<TeamsPageRef>((_props, ref) => {
   const [isCreateModalOpen, setIsCreateModalOpen] = useState(false)
+
+  // Get store action
+  const fetchTeams = useTeamsStore((state) => state.fetchTeams)
+
+  // Fetch data on mount
+  useEffect(() => {
+    fetchTeams()
+  }, [fetchTeams])
 
   useImperativeHandle(ref, () => ({
     openCreateModal: () => setIsCreateModalOpen(true)

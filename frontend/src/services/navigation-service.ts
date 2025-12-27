@@ -1,9 +1,11 @@
 export type AppView =
   | 'dashboard'
   | 'maintenance'
+  | 'calendar'
   | 'equipment'
   | 'equipment-categories'
   | 'teams'
+  | 'reporting'
 
 export interface NavigationParams {
   // Entity IDs for direct navigation

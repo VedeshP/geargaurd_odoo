@@ -5,7 +5,7 @@ import { useEquipmentCategoriesStore } from '@/stores/equipment-categories-store
 import type { Equipment, EquipmentCategory } from '@/stores/equipment-store'
 import { useEquipmentStore } from '@/stores/equipment-store'
 import { useTeamsStore } from '@/stores/teams-store'
-import { Archive, Search, X } from 'lucide-react'
+import { Archive, ExternalLink, Search, X } from 'lucide-react'
 import { useMemo, useState } from 'react'
 
 interface EquipmentModalProps {
@@ -50,15 +50,7 @@ export function EquipmentModal({ isOpen, onClose, equipment, mode, onNavigateToC
   })
 
   const handleCategoryChange = (value: string) => {
-    if (value === '__manage_categories__') {
-      // User selected "Manage Categories" option
-      if (onNavigateToCategories) {
-        onClose()
-        onNavigateToCategories()
-      }
-    } else {
-      setFormData({ ...formData, category: value as EquipmentCategory })
-    }
+    setFormData({ ...formData, category: value as EquipmentCategory })
   }
 
   if (!isOpen) return null
@@ -170,9 +162,25 @@ export function EquipmentModal({ isOpen, onClose, equipment, mode, onNavigateToC
 
                 {/* Equipment Category */}
                 <div>
-                  <Label htmlFor="category" className="text-slate-300 mb-2 block">
-                    Equipment Category
-                  </Label>
+                  <div className="flex items-center justify-between mb-2">
+                    <Label htmlFor="category" className="text-slate-300">
+                      Equipment Category
+                    </Label>
+                    {onNavigateToCategories && (
+                      <button
+                        type="button"
+                        onClick={() => {
+                          onNavigateToCategories()
+                          onClose()
+                        }}
+                        className="text-blue-400 hover:text-blue-300 text-xs flex items-center gap-1 transition-colors"
+                        title="Manage Equipment Categories"
+                      >
+                        <ExternalLink className="w-3 h-3" />
+                        <span>Manage Categories</span>
+                      </button>
+                    )}
+                  </div>
                   <select
                     id="category"
                     value={formData.category}
@@ -185,12 +193,6 @@ export function EquipmentModal({ isOpen, onClose, equipment, mode, onNavigateToC
                         {cat.name}
                       </option>
                     ))}
-                    <option disabled className="text-slate-500">
-                      ──────────
-                    </option>
-                    <option value="__manage_categories__" className="text-blue-400 font-medium">
-                      ⚙️ Manage Equipment Categories
-                    </option>
                   </select>
                 </div>
 

@@ -16,14 +16,19 @@ export interface EquipmentCategoryItem {
 
 interface EquipmentCategoriesStore {
   categories: EquipmentCategoryItem[]
-  addCategory: (category: Omit<EquipmentCategoryItem, 'id' | 'createdAt' | 'updatedAt' | 'equipmentCount'>) => void
-  updateCategory: (id: string, updates: Partial<EquipmentCategoryItem>) => void
-  deleteCategory: (id: string) => void
+  isLoading: boolean
+  error: string | null
+  
+  fetchCategories: (filters?: any) => Promise<void>
+  addCategory: (category: Omit<EquipmentCategoryItem, 'id' | 'createdAt' | 'updatedAt' | 'equipmentCount'>) => Promise<void>
+  updateCategory: (id: string, updates: Partial<EquipmentCategoryItem>) => Promise<void>
+  deleteCategory: (id: string) => Promise<void>
   getCategory: (id: string) => EquipmentCategoryItem | undefined
   getCategoryByName: (name: string) => EquipmentCategoryItem | undefined
   searchCategories: (query: string) => EquipmentCategoryItem[]
 }
 
+// Default categories (kept for reference)
 const defaultCategories: EquipmentCategoryItem[] = [
   {
     id: 'cat-1',
@@ -161,35 +166,48 @@ const defaultCategories: EquipmentCategoryItem[] = [
 
 export const useEquipmentCategoriesStore = create<EquipmentCategoriesStore>((set, get) => ({
   categories: defaultCategories,
+  isLoading: false,
+  error: null,
 
-  addCategory: (category) => {
-    const now = new Date().toISOString()
+  fetchCategories: async () => {
+    set({ isLoading: true, error: null })
+    await new Promise(resolve => setTimeout(resolve, 300))
+    set({ isLoading: false })
+  },
+
+  addCategory: async (category) => {
+    set({ isLoading: true, error: null })
+    await new Promise(resolve => setTimeout(resolve, 300))
     const newCategory: EquipmentCategoryItem = {
       ...category,
-      id: `cat-${Date.now()}`,
+      id: 'cat-' + Date.now(),
       equipmentCount: 0,
-      createdAt: now,
-      updatedAt: now,
+      createdAt: new Date().toISOString(),
+      updatedAt: new Date().toISOString(),
     }
     set((state) => ({
       categories: [...state.categories, newCategory],
+      isLoading: false,
     }))
   },
 
-  updateCategory: (id, updates) => {
+  updateCategory: async (id, updates) => {
+    set({ isLoading: true, error: null })
+    await new Promise(resolve => setTimeout(resolve, 300))
     set((state) => ({
       categories: state.categories.map((cat) =>
         cat.id === id ? { ...cat, ...updates, updatedAt: new Date().toISOString() } : cat
       ),
+      isLoading: false,
     }))
   },
 
-  deleteCategory: (id) => {
-    // Soft delete - set isActive to false
+  deleteCategory: async (id) => {
+    set({ isLoading: true, error: null })
+    await new Promise(resolve => setTimeout(resolve, 300))
     set((state) => ({
-      categories: state.categories.map((cat) =>
-        cat.id === id ? { ...cat, isActive: false, updatedAt: new Date().toISOString() } : cat
-      ),
+      categories: state.categories.filter((cat) => cat.id !== id),
+      isLoading: false,
     }))
   },
 

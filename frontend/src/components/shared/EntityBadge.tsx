@@ -13,7 +13,7 @@ interface EntityBadgeProps {
 
 export function EntityBadge({
   type,
-  id,
+  id: _id,
   label,
   count,
   className,
@@ -47,6 +47,16 @@ export function EntityBadge({
         default: 'bg-orange-500/10 text-orange-400 border-orange-500/20',
         outline: 'border-orange-500/40 text-orange-400 hover:bg-orange-500/10',
         secondary: 'bg-orange-500/5 text-orange-400 border-orange-500/10',
+      },
+      calendar: {
+        default: 'bg-indigo-500/10 text-indigo-400 border-indigo-500/20',
+        outline: 'border-indigo-500/40 text-indigo-400 hover:bg-indigo-500/10',
+        secondary: 'bg-indigo-500/5 text-indigo-400 border-indigo-500/10',
+      },
+      reporting: {
+        default: 'bg-cyan-500/10 text-cyan-400 border-cyan-500/20',
+        outline: 'border-cyan-500/40 text-cyan-400 hover:bg-cyan-500/10',
+        secondary: 'bg-cyan-500/5 text-cyan-400 border-cyan-500/10',
       },
       dashboard: {
         default: 'bg-slate-500/10 text-slate-400 border-slate-500/20',

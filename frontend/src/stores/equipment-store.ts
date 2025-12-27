@@ -51,15 +51,20 @@ export interface Equipment {
 
 interface EquipmentStore {
   equipment: Equipment[]
-  addEquipment: (equipment: Omit<Equipment, 'id' | 'createdAt' | 'updatedAt'>) => void
-  updateEquipment: (id: string, equipment: Partial<Equipment>) => void
-  deleteEquipment: (id: string) => void
+  isLoading: boolean
+  error: string | null
+  
+  fetchEquipment: (filters?: any) => Promise<void>
+  addEquipment: (equipment: Omit<Equipment, 'id' | 'createdAt' | 'updatedAt'>) => Promise<void>
+  updateEquipment: (id: string, equipment: Partial<Equipment>) => Promise<void>
+  deleteEquipment: (id: string) => Promise<void>
   getEquipment: (id: string) => Equipment | undefined
   getEquipmentByCategory: (category: EquipmentCategory) => Equipment[]
   getEquipmentByStatus: (status: EquipmentStatus) => Equipment[]
   searchEquipment: (query: string) => Equipment[]
 }
 
+// Mock equipment data (kept for reference)
 const mockEquipment: Equipment[] = [
   {
     id: 'eq-1',
@@ -175,34 +180,48 @@ const mockEquipment: Equipment[] = [
 
 export const useEquipmentStore = create<EquipmentStore>((set, get) => ({
   equipment: mockEquipment,
+  isLoading: false,
+  error: null,
 
-  addEquipment: (equipment) => {
-    const now = new Date().toISOString()
+  fetchEquipment: async () => {
+    set({ isLoading: true, error: null })
+    await new Promise(resolve => setTimeout(resolve, 300))
+    set({ isLoading: false })
+  },
+
+  addEquipment: async (equipment) => {
+    set({ isLoading: true, error: null })
+    await new Promise(resolve => setTimeout(resolve, 300))
     const newEquipment: Equipment = {
       ...equipment,
-      id: `eq-${Date.now()}`,
-      createdAt: now,
-      updatedAt: now,
+      id: 'eq-' + Date.now(),
+      createdAt: new Date().toISOString(),
+      updatedAt: new Date().toISOString(),
+      isActive: true,
     }
     set((state) => ({
       equipment: [...state.equipment, newEquipment],
+      isLoading: false,
     }))
   },
 
-  updateEquipment: (id, updates) => {
+  updateEquipment: async (id, updates) => {
+    set({ isLoading: true, error: null })
+    await new Promise(resolve => setTimeout(resolve, 300))
     set((state) => ({
       equipment: state.equipment.map((eq) =>
         eq.id === id ? { ...eq, ...updates, updatedAt: new Date().toISOString() } : eq
       ),
+      isLoading: false,
     }))
   },
 
-  deleteEquipment: (id) => {
-    // Soft delete - set isActive to false
+  deleteEquipment: async (id) => {
+    set({ isLoading: true, error: null })
+    await new Promise(resolve => setTimeout(resolve, 300))
     set((state) => ({
-      equipment: state.equipment.map((eq) =>
-        eq.id === id ? { ...eq, isActive: false, updatedAt: new Date().toISOString() } : eq
-      ),
+      equipment: state.equipment.filter((eq) => eq.id !== id),
+      isLoading: false,
     }))
   },
 

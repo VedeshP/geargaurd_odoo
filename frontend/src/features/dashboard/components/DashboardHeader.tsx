@@ -1,11 +1,13 @@
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
-import { Plus, Search, User } from 'lucide-react'
+import { useUserStore } from '@/stores/user-store'
+import { LogOut, Plus, Search, User } from 'lucide-react'
 
 interface DashboardHeaderProps {
   activeTab: string
   onTabChange: (tab: string) => void
   onNewRequest: () => void
+  onProfileClick: () => void
 }
 
 const tabs = [
@@ -17,7 +19,14 @@ const tabs = [
    { id: 'teams', label: 'Teams' },
 ]
 
-export function DashboardHeader({ activeTab, onTabChange, onNewRequest }: DashboardHeaderProps) {
+export function DashboardHeader({ activeTab, onTabChange, onNewRequest, onProfileClick }: DashboardHeaderProps) {
+  const logout = useUserStore((state) => state.logout)
+
+  const handleLogout = () => {
+    logout()
+    window.location.reload()
+  }
+
   return (
     <div className="bg-slate-900 border-b border-slate-800">
       {/* Navigation Tabs */}
@@ -59,8 +68,20 @@ export function DashboardHeader({ activeTab, onTabChange, onNewRequest }: Dashbo
           />
         </div>
 
-        <button className="bg-slate-800 hover:bg-slate-700 p-2 rounded-lg transition-colors cursor-pointer">
+        <button 
+          onClick={onProfileClick}
+          className="bg-slate-800 hover:bg-slate-700 p-2 rounded-lg transition-colors cursor-pointer"
+          title="User Profile"
+        >
           <User className="h-5 w-5 text-slate-300" />
+        </button>
+
+        <button 
+          onClick={handleLogout}
+          className="bg-slate-800 hover:bg-red-900/50 p-2 rounded-lg transition-colors cursor-pointer group"
+          title="Logout"
+        >
+          <LogOut className="h-5 w-5 text-slate-300 group-hover:text-red-400 transition-colors" />
         </button>
       </div>
     </div>

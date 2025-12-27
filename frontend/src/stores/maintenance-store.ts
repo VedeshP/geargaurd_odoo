@@ -15,6 +15,10 @@ export interface MaintenanceRequest {
   categoryId?: string
   companyId?: string
 
+  // Hard-coded display names (for static demo)
+  maintainerName?: string
+  categoryName?: string
+
   // Request details
   maintenanceFor: 'equipment' | 'work-center'
   workCenter?: string
@@ -41,11 +45,14 @@ export interface MaintenanceRequest {
 
 interface MaintenanceStore {
   requests: MaintenanceRequest[]
+  isLoading: boolean
+  error: string | null
 
-  // CRUD operations
-  addRequest: (request: Omit<MaintenanceRequest, 'id' | 'createdAt' | 'updatedAt' | 'isActive'>) => void
-  updateRequest: (id: string, updates: Partial<MaintenanceRequest>) => void
-  deleteRequest: (id: string) => void
+  // CRUD operations (async)
+  fetchRequests: (filters?: any) => Promise<void>
+  addRequest: (request: Omit<MaintenanceRequest, 'id' | 'createdAt' | 'updatedAt' | 'isActive'>) => Promise<void>
+  updateRequest: (id: string, updates: Partial<MaintenanceRequest>) => Promise<void>
+  deleteRequest: (id: string) => Promise<void>
   getRequest: (id: string) => MaintenanceRequest | undefined
 
   // Query methods
@@ -61,22 +68,25 @@ interface MaintenanceStore {
   getRequestCountByTechnician: (technicianId: string) => number
 }
 
-// Mock data with normalized references
+// Mock data with normalized references (kept for reference)
 const mockRequests: MaintenanceRequest[] = [
   {
     id: 'req-1',
     subject: 'Critical Alert - Monitor Flickering',
     equipmentId: 'eq-1', // Reference to Samsung Monitor
     teamId: '1', // Internal Maintenance
-    technicianId: '1', // Jose Mukari
+    technicianId: 'user-1', // Jose Mukari
+    categoryId: 'cat-3', // Monitors
+    maintainerName: 'Jose Mukari',
+    categoryName: 'Monitors',
     maintenanceFor: 'equipment',
     maintenanceType: 'corrective',
     priority: 'high',
     status: 'new',
-    requestDate: '2024-12-27',
+    requestDate: '2025-12-27',
     notes: 'Monitor started flickering during important presentation',
-    createdAt: '2024-12-27T08:00:00Z',
-    updatedAt: '2024-12-27T08:00:00Z',
+    createdAt: '2025-12-27T08:00:00Z',
+    updatedAt: '2025-12-27T08:00:00Z',
     isActive: true,
   },
   {
@@ -84,73 +94,175 @@ const mockRequests: MaintenanceRequest[] = [
     subject: 'Routine Maintenance - Laptop',
     equipmentId: 'eq-2', // Reference to Acer Laptop
     teamId: '1',
-    technicianId: '1', // Jose Mukari (changed from Mitchell Admin which doesn't exist)
+    technicianId: 'user-1', // Jose Mukari
+    categoryId: 'cat-1', // Computers
+    maintainerName: 'Jose Mukari',
+    categoryName: 'Computers',
     maintenanceFor: 'equipment',
     maintenanceType: 'preventive',
     priority: 'medium',
     status: 'in-progress',
-    requestDate: '2024-12-26',
-    scheduledDate: '2024-12-28T10:00',
+    requestDate: '2025-12-26',
+    scheduledDate: '2025-12-28T10:00',
     duration: '02:00',
     notes: 'Quarterly maintenance check',
-    createdAt: '2024-12-26T09:00:00Z',
-    updatedAt: '2024-12-27T09:00:00Z',
+    createdAt: '2025-12-26T09:00:00Z',
+    updatedAt: '2025-12-27T09:00:00Z',
     isActive: true,
   },
   {
     id: 'req-3',
-    subject: 'CNC Machine Calibration Overdue',
+    subject: 'CNC Machine Calibration',
     equipmentId: 'eq-5', // Reference to CNC Machine
     teamId: '2', // Metrology
-    technicianId: '2', // Marc Demo
+    technicianId: 'user-2', // Marc Demo
+    categoryId: 'cat-8', // Production Machinery
+    maintainerName: 'Marc Demo',
+    categoryName: 'Production Machinery',
     maintenanceFor: 'equipment',
     maintenanceType: 'preventive',
     priority: 'high',
-    status: 'overdue',
-    requestDate: '2024-12-20',
-    scheduledDate: '2024-12-25T14:00',
-    notes: 'Annual calibration is past due',
-    createdAt: '2024-12-20T10:00:00Z',
-    updatedAt: '2024-12-27T10:00:00Z',
+    status: 'in-progress',
+    requestDate: '2025-12-20',
+    scheduledDate: '2025-12-27T14:00',
+    duration: '01:00',
+    notes: 'Annual calibration required',
+    createdAt: '2025-12-20T10:00:00Z',
+    updatedAt: '2025-12-27T10:00:00Z',
+    isActive: true,
+  },
+  {
+    id: 'req-4',
+    subject: 'Keyboard Replacement',
+    equipmentId: 'eq-3', // Reference to HP Printer
+    teamId: '1',
+    technicianId: 'user-1',
+    categoryId: 'cat-4', // Printers
+    maintainerName: 'Jose Mukari',
+    categoryName: 'Printers',
+    maintenanceFor: 'equipment',
+    maintenanceType: 'corrective',
+    priority: 'low',
+    status: 'new',
+    requestDate: '2025-12-27',
+    scheduledDate: '2025-12-30T09:00',
+    duration: '00:30',
+    notes: 'Some keys are not working properly',
+    createdAt: '2025-12-27T11:00:00Z',
+    updatedAt: '2025-12-27T11:00:00Z',
+    isActive: true,
+  },
+  {
+    id: 'req-5',
+    subject: 'Printer Maintenance',
+    equipmentId: 'eq-4', // Reference to Dell Server
+    teamId: '1',
+    technicianId: 'user-3', // Joel Willis
+    categoryId: 'cat-5', // Servers
+    maintainerName: 'Joel Willis',
+    categoryName: 'Servers',
+    maintenanceFor: 'equipment',
+    maintenanceType: 'preventive',
+    priority: 'low',
+    status: 'completed',
+    requestDate: '2025-12-25',
+    scheduledDate: '2025-12-26T14:00',
+    duration: '01:00',
+    notes: 'Monthly cleaning and ink cartridge check',
+    instructions: 'Replace toner if below 20%',
+    createdAt: '2025-12-25T08:00:00Z',
+    updatedAt: '2025-12-26T15:30:00Z',
+    isActive: true,
+  },
+  {
+    id: 'req-6',
+    subject: 'Network Equipment Check',
+    equipmentId: 'eq-2',
+    teamId: '1',
+    technicianId: 'user-1',
+    categoryId: 'cat-1', // Computers
+    maintainerName: 'Jose Mukari',
+    categoryName: 'Computers',
+    maintenanceFor: 'equipment',
+    maintenanceType: 'preventive',
+    priority: 'medium',
+    status: 'new',
+    requestDate: '2025-12-22',
+    scheduledDate: '2025-12-23T13:00',
+    duration: '02:00',
+    notes: 'Check network equipment and connectivity',
+    createdAt: '2025-12-22T10:00:00Z',
+    updatedAt: '2025-12-22T10:00:00Z',
+    isActive: true,
+  },
+  {
+    id: 'req-7',
+    subject: 'Monitor Screen Cleaning',
+    equipmentId: 'eq-1',
+    teamId: '1',
+    categoryId: 'cat-3', // Monitors
+    technicianId: 'user-3',
+    maintainerName: 'Joel Willis',
+    categoryName: 'Monitors',
+    maintenanceFor: 'equipment',
+    maintenanceType: 'preventive',
+    priority: 'low',
+    status: 'completed',
+    requestDate: '2025-12-24',
+    scheduledDate: '2025-12-24T10:00',
+    duration: '00:15',
+    notes: 'Routine cleaning service',
+    createdAt: '2025-12-24T08:00:00Z',
+    updatedAt: '2025-12-24T10:15:00Z',
     isActive: true,
   },
 ]
 
 export const useMaintenanceStore = create<MaintenanceStore>((set, get) => ({
   requests: mockRequests,
+  isLoading: false,
+  error: null,
 
-  addRequest: (request) => {
-    const now = new Date().toISOString()
+  fetchRequests: async () => {
+    set({ isLoading: true, error: null })
+    // Simulate API delay
+    await new Promise(resolve => setTimeout(resolve, 300))
+    set({ isLoading: false })
+  },
+
+  addRequest: async (request) => {
+    set({ isLoading: true, error: null })
+    await new Promise(resolve => setTimeout(resolve, 300))
     const newRequest: MaintenanceRequest = {
       ...request,
-      id: `req-${Date.now()}`,
-      createdAt: now,
-      updatedAt: now,
+      id: 'req-' + Date.now(),
+      createdAt: new Date().toISOString(),
+      updatedAt: new Date().toISOString(),
       isActive: true,
     }
     set((state) => ({
       requests: [...state.requests, newRequest],
+      isLoading: false,
     }))
   },
 
-  updateRequest: (id, updates) => {
+  updateRequest: async (id, updates) => {
+    set({ isLoading: true, error: null })
+    await new Promise(resolve => setTimeout(resolve, 300))
     set((state) => ({
       requests: state.requests.map((req) =>
-        req.id === id
-          ? { ...req, ...updates, updatedAt: new Date().toISOString() }
-          : req
+        req.id === id ? { ...req, ...updates, updatedAt: new Date().toISOString() } : req
       ),
+      isLoading: false,
     }))
   },
 
-  deleteRequest: (id) => {
-    // Soft delete
+  deleteRequest: async (id) => {
+    set({ isLoading: true, error: null })
+    await new Promise(resolve => setTimeout(resolve, 300))
     set((state) => ({
-      requests: state.requests.map((req) =>
-        req.id === id
-          ? { ...req, isActive: false, updatedAt: new Date().toISOString() }
-          : req
-      ),
+      requests: state.requests.filter((req) => req.id !== id),
+      isLoading: false,
     }))
   },
 
