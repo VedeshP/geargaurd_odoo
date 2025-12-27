@@ -1,4 +1,7 @@
-import { forwardRef, useImperativeHandle, useState } from 'react'
+import { useEquipmentStore } from '@/stores/equipment-store'
+import { useMaintenanceStore } from '@/stores/maintenance-store'
+import { useTeamsStore } from '@/stores/teams-store'
+import { forwardRef, useEffect, useImperativeHandle, useState } from 'react'
 import { MaintenanceFilters } from './components/MaintenanceFilters'
 import { MaintenanceRequestModal } from './components/MaintenanceRequestModal'
 import { MaintenanceRequestsTable } from './components/MaintenanceRequestsTable'
@@ -16,6 +19,18 @@ export const MaintenancePage = forwardRef<MaintenancePageRef>((_props, ref) => {
     teamId: '',
     search: '',
   })
+
+  // Get store actions
+  const fetchRequests = useMaintenanceStore((state) => state.fetchRequests)
+  const fetchTeams = useTeamsStore((state) => state.fetchTeams)
+  const fetchEquipment = useEquipmentStore((state) => state.fetchEquipment)
+
+  // Fetch data on mount
+  useEffect(() => {
+    fetchRequests()
+    fetchTeams()
+    fetchEquipment()
+  }, [fetchRequests, fetchTeams, fetchEquipment])
 
   // Expose methods to parent via ref
   useImperativeHandle(ref, () => ({

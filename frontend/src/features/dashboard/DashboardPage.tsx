@@ -1,6 +1,5 @@
 import { useNavigation } from '@/hooks/use-navigation'
 import { useEffect, useRef, useState } from 'react'
-import { MaintenanceCalendarPage } from '../maintenance-calendar/MaintenanceCalendarPage';
 import type { EquipmentCategoriesPageRef } from '../equipment-categories/EquipmentCategoriesPage'
 import { EquipmentCategoriesPage } from '../equipment-categories/EquipmentCategoriesPage'
 import type { EquipmentPageRef } from '../equipment/EquipmentPage'
@@ -9,6 +8,7 @@ import type { MaintenanceCalendarPageRef } from '../maintenance-calendar/Mainten
 import { MaintenanceCalendarPage } from '../maintenance-calendar/MaintenanceCalendarPage'
 import type { MaintenancePageRef } from '../maintenance/MaintenancePage'
 import { MaintenancePage } from '../maintenance/MaintenancePage'
+import { ProfilePage } from '../profile/ProfilePage'
 import type { ReportingPageRef } from '../reporting/ReportingPage'
 import { ReportingPage } from '../reporting/ReportingPage'
 import type { TeamsPageRef } from '../teams/TeamsPage'
@@ -21,6 +21,7 @@ import { MaintenanceRequestsTable } from './components/MaintenanceRequestsTable'
 export function DashboardPage() {
   const { currentView, navigationParams, navigate } = useNavigation()
   const [activeTab, setActiveTab] = useState('dashboard')
+  const [showProfile, setShowProfile] = useState(false)
   const teamsPageRef = useRef<TeamsPageRef>(null)
   const equipmentPageRef = useRef<EquipmentPageRef>(null)
   const equipmentCategoriesPageRef = useRef<EquipmentCategoriesPageRef>(null)
@@ -58,11 +59,6 @@ export function DashboardPage() {
     // Equipment page will handle opening the modal if equipmentId is provided
   }
 
-  const handleNavigateToCalendar = () => {
-    setActiveTab('calendar');
-    setIsCreateModalOpen(false);
-  };
-
   // Listen to navigation service events
   useEffect(() => {
     if (currentView && currentView !== activeTab) {
@@ -86,6 +82,11 @@ export function DashboardPage() {
     }
   }, [currentView, navigationParams, activeTab])
 
+  // Show profile page if requested
+  if (showProfile) {
+    return <ProfilePage onBack={() => setShowProfile(false)} />
+  }
+
   return (
     <div className="min-h-screen bg-slate-950">
       <DashboardHeader
@@ -96,6 +97,7 @@ export function DashboardPage() {
           navigate(tab as any)
         }}
         onNewRequest={handleNewClick}
+        onProfileClick={() => setShowProfile(true)}
       />
 
       {activeTab === 'teams' ? (
@@ -107,15 +109,10 @@ export function DashboardPage() {
       ) : activeTab === 'reporting' ? (
         <ReportingPage ref={reportingPageRef} />
       ) : activeTab === 'calendar' ? (
-<<<<<<< HEAD
         <MaintenanceCalendarPage ref={calendarPageRef} />
       ) : activeTab === 'maintenance' ? (
         <MaintenancePage ref={maintenancePageRef} />
       ) : activeTab === 'dashboard' ? (
-=======
-        <MaintenanceCalendarPage />
-      ) : activeTab === 'dashboard' || activeTab === 'maintenance' ? (
->>>>>>> a9d4ded56e0aa8e2c4f44a854443d5a906f79770
         <main className="p-6 max-w-7xl mx-auto">
           <DashboardMetrics />
           <MaintenanceRequestsTable 

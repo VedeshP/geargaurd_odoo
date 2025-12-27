@@ -1,6 +1,7 @@
 import { EntityLink } from '@/components/shared/EntityLink'
 import { Button } from '@/components/ui/button'
 import { MaintenanceRequestModal } from '@/features/maintenance/components/MaintenanceRequestModal'
+import { useEquipmentCategoriesStore } from '@/stores/equipment-categories-store'
 import { useEquipmentStore } from '@/stores/equipment-store'
 import { useMaintenanceStore } from '@/stores/maintenance-store'
 import { useTeamsStore } from '@/stores/teams-store'
@@ -42,8 +43,8 @@ export function MaintenanceRequestsTable({ filters, onNavigateToTeams, onNavigat
   // Get data from stores
   const allRequests = useMaintenanceStore((state) => state.requests)
   const equipment = useEquipmentStore((state) => state.equipment)
+  const categories = useEquipmentCategoriesStore((state) => state.categories)
   const allMembers = useTeamsStore((state) => state.getAllMembers)
-  const teams = useTeamsStore((state) => state.teams)
 
   const members = useMemo(() => allMembers(), [allMembers])
 
@@ -57,15 +58,16 @@ export function MaintenanceRequestsTable({ filters, onNavigateToTeams, onNavigat
     return eq?.name || 'Unknown Equipment'
   }
 
+  const getCategoryName = (categoryId?: string) => {
+    if (!categoryId) return 'Unknown'
+    const cat = categories.find((c) => c.id === categoryId)
+    return cat?.name || 'Unknown'
+  }
+
   const getTechnicianName = (technicianId?: string) => {
     if (!technicianId) return 'Unassigned'
     const member = members.find((m) => m.userId === technicianId)
     return member?.name || 'Unknown'
-  }
-
-  const getTeamName = (teamId: string) => {
-    const team = teams.find((t) => t.id === teamId)
-    return team?.name || 'Unknown Team'
   }
 
   // Apply filters
@@ -176,13 +178,13 @@ export function MaintenanceRequestsTable({ filters, onNavigateToTeams, onNavigat
                         onClick={() => onNavigateToTeams?.()}
                         className="text-sm"
                       >
-                        {getTechnicianName(request.technicianId)}
+                        {request.maintainerName || getTechnicianName(request.technicianId)}
                       </EntityLink>
                     </div>
                   </td>
                   <td className="py-4 px-6">
                     <span className="text-sm text-slate-300">
-                      {getTeamName(request.teamId)}
+                      {request.categoryName || getCategoryName(request.categoryId)}
                     </span>
                   </td>
                   <td className="py-4 px-6">

@@ -19,77 +19,117 @@ export interface Team {
 
 interface TeamsStore {
   teams: Team[]
-  addTeam: (team: Omit<Team, 'id'>) => void
-  updateTeam: (id: string, team: Partial<Team>) => void
-  deleteTeam: (id: string) => void
+  isLoading: boolean
+  error: string | null
+  
+  fetchTeams: (filters?: any) => Promise<void>
+  addTeam: (team: Omit<Team, 'id'>) => Promise<void>
+  updateTeam: (id: string, team: Partial<Team>) => Promise<void>
+  deleteTeam: (id: string) => Promise<void>
   getTeam: (id: string) => Team | undefined
   getTeamMembers: (teamId: string) => TeamMember[]
   getAllMembers: () => TeamMember[]
 }
 
+// Mock teams data
+const mockTeams: Team[] = [
+  {
+    id: '1',
+    name: 'Internal Maintenance',
+    company: 'My Company',
+    description: 'Core maintenance team for internal operations',
+    members: [
+      {
+        id: '1',
+        userId: 'user-1',
+        name: 'Jose Mukari',
+        email: 'jose@company.com',
+        role: 'team_leader',
+      },
+      {
+        id: '2',
+        userId: 'user-2',
+        name: 'Marcus Twain',
+        email: 'marcus@company.com',
+        role: 'technician',
+      },
+      {
+        id: '3',
+        userId: 'user-3',
+        name: 'Sarah Johnson',
+        email: 'sarah@company.com',
+        role: 'technician',
+      },
+    ],
+    isActive: true,
+  },
+  {
+    id: '2',
+    name: 'IT Support Team',
+    company: 'My Company',
+    description: 'Technical support and computer maintenance',
+    members: [
+      {
+        id: '4',
+        userId: 'user-4',
+        name: 'David Chen',
+        email: 'david@company.com',
+        role: 'team_leader',
+      },
+      {
+        id: '5',
+        userId: 'user-5',
+        name: 'Emily White',
+        email: 'emily@company.com',
+        role: 'technician',
+      },
+    ],
+    isActive: true,
+  },
+]
+
 export const useTeamsStore = create<TeamsStore>((set, get) => ({
-  teams: [
-    {
-      id: '1',
-      name: 'Internal Maintenance',
-      company: 'My Company (San Francisco)',
+  teams: [],
+  isLoading: false,
+  error: null,
+
+  fetchTeams: async () => {
+    set({ isLoading: true, error: null, teams: mockTeams })
+    await new Promise(resolve => setTimeout(resolve, 300))
+    set({ isLoading: false })
+  },
+  
+  addTeam: async (team) => {
+    set({ isLoading: true, error: null })
+    await new Promise(resolve => setTimeout(resolve, 300))
+    const newTeam: Team = {
+      ...team,
+      id: 'team-' + Date.now(),
       isActive: true,
-      members: [
-        {
-          id: '1',
-          userId: '1',
-          name: 'Jose Mukari',
-          email: 'jose@company.com',
-          role: 'team_leader'
-        }
-      ],
-      description: 'Handles all internal equipment maintenance'
-    },
-    {
-      id: '2',
-      name: 'Metrology',
-      company: 'My Company (San Francisco)',
-      isActive: true,
-      members: [
-        {
-          id: '2',
-          userId: '2',
-          name: 'Marc Demo',
-          email: 'marc@company.com',
-          role: 'technician'
-        }
-      ],
-      description: 'Precision measurement and calibration team'
-    },
-    {
-      id: '3',
-      name: 'Subcontractor',
-      company: 'My Company (San Francisco)',
-      isActive: true,
-      members: [
-        {
-          id: '3',
-          userId: '3',
-          name: 'Maggie Davidson',
-          email: 'maggie@company.com',
-          role: 'supervisor'
-        }
-      ],
-      description: 'External contractor coordination'
     }
-  ],
+    set((state) => ({
+      teams: [...state.teams, newTeam],
+      isLoading: false,
+    }))
+  },
   
-  addTeam: (team) => set((state) => ({
-    teams: [...state.teams, { ...team, id: Date.now().toString() }]
-  })),
+  updateTeam: async (id, updates) => {
+    set({ isLoading: true, error: null })
+    await new Promise(resolve => setTimeout(resolve, 300))
+    set((state) => ({
+      teams: state.teams.map(t => t.id === id ? { ...t, ...updates } : t),
+      isLoading: false,
+    }))
+  },
   
-  updateTeam: (id, updates) => set((state) => ({
-    teams: state.teams.map(t => t.id === id ? { ...t, ...updates } : t)
-  })),
-  
-  deleteTeam: (id) => set((state) => ({
-    teams: state.teams.map(t => t.id === id ? { ...t, isActive: false } : t)
-  })),
+  deleteTeam: async (id) => {
+    set({ isLoading: true, error: null })
+    await new Promise(resolve => setTimeout(resolve, 300))
+    set((state) => ({
+      teams: state.teams.filter(t => t.id !== id),
+      isLoading: false,
+    }))
+  },
   
   getTeam: (id) => get().teams.find(t => t.id === id),
   
