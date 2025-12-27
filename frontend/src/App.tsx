@@ -1,10 +1,11 @@
 import './App.css'
 
 function App() {
-
   return (
     <>
-      <div className='bg-amber-700'>hellow</div>
+      <div className='bg-amber-700'>
+        hellow
+      </div>
     </>
   )
 }
