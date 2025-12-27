@@ -62,6 +62,18 @@ class Team(Base):
     members = relationship("User", back_populates="team")
     requests = relationship("MaintenanceRequest", back_populates="team")
 
+class Workcenter(Base):
+    __tablename__ = "workcenters"
+    id = Column(UUID(as_uuid=True), primary_key=True, default=uuid.uuid4)
+    name = Column(String(100), nullable=False) # e.g., "Assembly Line 1"
+    code = Column(String(50), unique=True) # e.g., "WC-01"
+    company_id = Column(UUID(as_uuid=True), ForeignKey("companies.id"), nullable=False)
+    
+    # Relationships
+    company = relationship("Company")
+    equipment = relationship("Equipment", back_populates="workcenter")
+    requests = relationship("MaintenanceRequest", back_populates="workcenter")
+
 class User(Base):
     __tablename__ = "users"
     id = Column(UUID(as_uuid=True), primary_key=True, default=uuid.uuid4)
@@ -77,9 +89,18 @@ class User(Base):
     company = relationship("Company", back_populates="users")
     department = relationship("Department", back_populates="users")
     team = relationship("Team", back_populates="members")
+     # --- FIXED RELATIONSHIPS ---
+    # 1. Equipment this user uses/owns
     owned_equipment = relationship("Equipment", back_populates="employee", foreign_keys="Equipment.employee_id")
-    # Link for Technician assignment
+    
+    # 2. Equipment where this user is the DEFAULT technician
     assigned_equipment = relationship("Equipment", back_populates="technician", foreign_keys="Equipment.technician_id")
+    
+    # 3. Maintenance Requests where this user is the ASSIGNED technician (This was missing!)
+    assigned_requests = relationship("MaintenanceRequest", back_populates="technician", foreign_keys="MaintenanceRequest.technician_id")
+    
+    # 4. Maintenance Requests this user CREATED
+    created_requests = relationship("MaintenanceRequest", back_populates="creator", foreign_keys="MaintenanceRequest.created_by_id")
 
 class Equipment(Base):
     __tablename__ = "equipment"
@@ -88,6 +109,7 @@ class Equipment(Base):
     serial_number = Column(String(100), unique=True, nullable=False) # "MT/125/22778837"
     
     category_id = Column(UUID(as_uuid=True), ForeignKey("equipment_categories.id"), nullable=False)
+    workcenter_id = Column(UUID(as_uuid=True), ForeignKey("workcenters.id"), nullable=True)
     department_id = Column(UUID(as_uuid=True), ForeignKey("departments.id"), nullable=False)
     company_id = Column(UUID(as_uuid=True), ForeignKey("companies.id"), nullable=False)
     
@@ -106,6 +128,7 @@ class Equipment(Base):
     employee = relationship("User", foreign_keys=[employee_id], back_populates="owned_equipment")
     technician = relationship("User", foreign_keys=[technician_id], back_populates="assigned_equipment")
     requests = relationship("MaintenanceRequest", back_populates="equipment")
+    workcenter = relationship("Workcenter", back_populates="equipment")
 
 class MaintenanceRequest(Base):
     __tablename__ = "maintenance_requests"
@@ -128,11 +151,12 @@ class MaintenanceRequest(Base):
     # --- Foreign Keys ---
     
     # The "What"
-    equipment_id = Column(UUID(as_uuid=True), ForeignKey("equipment.id"), nullable=False)
+    equipment_id = Column(UUID(as_uuid=True), ForeignKey("equipment.id"), nullable=True)
+    workcenter_id = Column(UUID(as_uuid=True), ForeignKey("workcenters.id"), nullable=True)
     
     # The "Who" (Logic: Only team members should pick this up)
     team_id = Column(UUID(as_uuid=True), ForeignKey("teams.id"), nullable=False)
-    technician_id = Column(UUID(as_uuid=True), ForeignKey("users.id"), nullable=True)
+    technician_id = Column(UUID(as_uuid=True), ForeignKey("users.id"), nullable=True)   
     
     # The "Where" (Multi-company segregation)
     company_id = Column(UUID(as_uuid=True), ForeignKey("companies.id"), nullable=False)
@@ -140,6 +164,9 @@ class MaintenanceRequest(Base):
     # Tracking/Auto-fill Data (Required for Page 2: Auto-fill Equipment Category)
     # We store these directly on the request for historical reporting snapshot
     category_id = Column(UUID(as_uuid=True), ForeignKey("equipment_categories.id"), nullable=False)
+
+    # priority setting as per forntend wireframe
+    priority = Column(Integer, default=1, nullable=False)  # Values: 1, 2, or 3
     
     # Audit Trail
     created_by_id = Column(UUID(as_uuid=True), ForeignKey("users.id"), nullable=False)
@@ -154,21 +181,14 @@ class MaintenanceRequest(Base):
     # Link to the Maintenance Team
     team = relationship("Team", back_populates="requests")
     
-    # Link to the specific Technician (Technician assigned to work on it)
-    technician = relationship(
-        "User", 
-        foreign_keys=[technician_id], 
-        back_populates="assigned_requests"
-    )
-    
-    # Link to the User who created the ticket (Employee/Manager)
-    creator = relationship(
-        "User", 
-        foreign_keys=[created_by_id]
-    )
+    # fixed relationships
+    technician = relationship("User", foreign_keys=[technician_id], back_populates="assigned_requests")
+    creator = relationship("User", foreign_keys=[created_by_id], back_populates="created_requests")
     
     # Link to the Company
     company = relationship("Company")
     
     # Link to Category (for the Pivot/Graph reports)
     category = relationship("EquipmentCategory")
+
+    workcenter = relationship("Workcenter", back_populates="requests")
