@@ -89,9 +89,18 @@ class User(Base):
     company = relationship("Company", back_populates="users")
     department = relationship("Department", back_populates="users")
     team = relationship("Team", back_populates="members")
+     # --- FIXED RELATIONSHIPS ---
+    # 1. Equipment this user uses/owns
     owned_equipment = relationship("Equipment", back_populates="employee", foreign_keys="Equipment.employee_id")
-    # Link for Technician assignment
+    
+    # 2. Equipment where this user is the DEFAULT technician
     assigned_equipment = relationship("Equipment", back_populates="technician", foreign_keys="Equipment.technician_id")
+    
+    # 3. Maintenance Requests where this user is the ASSIGNED technician (This was missing!)
+    assigned_requests = relationship("MaintenanceRequest", back_populates="technician", foreign_keys="MaintenanceRequest.technician_id")
+    
+    # 4. Maintenance Requests this user CREATED
+    created_requests = relationship("MaintenanceRequest", back_populates="creator", foreign_keys="MaintenanceRequest.created_by_id")
 
 class Equipment(Base):
     __tablename__ = "equipment"
@@ -172,18 +181,9 @@ class MaintenanceRequest(Base):
     # Link to the Maintenance Team
     team = relationship("Team", back_populates="requests")
     
-    # Link to the specific Technician (Technician assigned to work on it)
-    technician = relationship(
-        "User", 
-        foreign_keys=[technician_id], 
-        back_populates="assigned_requests"
-    )
-    
-    # Link to the User who created the ticket (Employee/Manager)
-    creator = relationship(
-        "User", 
-        foreign_keys=[created_by_id]
-    )
+    # fixed relationships
+    technician = relationship("User", foreign_keys=[technician_id], back_populates="assigned_requests")
+    creator = relationship("User", foreign_keys=[created_by_id], back_populates="created_requests")
     
     # Link to the Company
     company = relationship("Company")

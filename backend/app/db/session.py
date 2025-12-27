@@ -1,12 +1,14 @@
 import os
 from sqlalchemy import create_engine
 from sqlalchemy.orm import sessionmaker
+from dotenv import load_dotenv
 
+load_dotenv()
 # In a real app, we'd use a .env file. For the hackathon, we can provide a default.
 # Format: postgresql://user:password@localhost:5432/dbname
 SQLALCHEMY_DATABASE_URL = os.getenv(
-    "DATABASE_URL", 
-    "postgresql://postgres:postgres@localhost:5432/gearguard"
+    "DATABASE_URL"
+    # "postgresql://postgres:postgres@localhost:5432/gearguard"
 )
 
 # pool_pre_ping=True is highly recommended for PostgreSQL.
