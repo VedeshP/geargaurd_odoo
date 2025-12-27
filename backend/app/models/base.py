@@ -8,6 +8,16 @@ from sqlalchemy.orm import relationship, declarative_base
 Base = declarative_base()
 
 # --- ENUMS ---
+PRIORITY_MAP = {
+    "low": 1,
+    "medium": 2,
+    "high": 3
+}
+
+# Reverse map for GET requests
+PRIORITY_REVERSE_MAP = {v: k for k, v in PRIORITY_MAP.items()}
+
+
 class UserRole(str, enum.Enum):
     MANAGER = "manager"
     TECHNICIAN = "technician"
@@ -57,6 +67,8 @@ class Team(Base):
     id = Column(UUID(as_uuid=True), primary_key=True, default=uuid.uuid4)
     name = Column(String(100), nullable=False)
     company_id = Column(UUID(as_uuid=True), ForeignKey("companies.id"), nullable=False)
+    description = Column(Text, nullable=True)
+    is_active = Column(Boolean, default=True)
     
     company = relationship("Company", back_populates="teams")
     members = relationship("User", back_populates="team")
@@ -172,6 +184,11 @@ class MaintenanceRequest(Base):
     created_by_id = Column(UUID(as_uuid=True), ForeignKey("users.id"), nullable=False)
     created_at = Column(DateTime, default=datetime.utcnow)
     updated_at = Column(DateTime, default=datetime.utcnow, onupdate=datetime.utcnow)
+
+    instructions = Column(Text, nullable=True)
+    is_blocked = Column(Boolean, default=False)
+    is_archived = Column(Boolean, default=False)
+    is_active = Column(Boolean, default=True)
 
     # --- Relationships ---
 
